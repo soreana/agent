@@ -13,15 +13,14 @@ public class Agent implements Runnable{
     private Thread mainThread;
     private ServerSocket serverSocket;
     private ArrayList<SubAgent> subAgents;
+    private static final int SUB_AGENTS_NUMBER = 4;
 
     public Agent(int portNumber) throws IOException {
         mainThread = new Thread(this);
         serverSocket = new ServerSocket(portNumber);
         subAgents = new ArrayList<>();
-        subAgents.add(new SubAgent());
-        subAgents.add(new SubAgent());
-        subAgents.add(new SubAgent());
-        subAgents.add(new SubAgent());
+        for (int i =0 ; i < SUB_AGENTS_NUMBER ; i++ )
+            subAgents.add(new SubAgent());
         mainThread.start();
     }
 
@@ -53,12 +52,20 @@ public class Agent implements Runnable{
             String input;
             try {
                 while( (input = in.readLine() ) != null ){
-                    System.out.println( input );
-                    out.println(input);
+                    System.out.println( client.getInetAddress() + " " +  client.getPort()  + " said : " + input );
+                    broadcast(input);
                 }
             } catch (IOException e) {
                 e.printStackTrace();
             }
+        }
+
+        private synchronized void broadcast(String message){
+            for (SubAgent current  : subAgents ){
+                if (current != this && current.out != null)
+                    current.out.println(message);
+            }
+
         }
     }
 
@@ -78,7 +85,7 @@ public class Agent implements Runnable{
     }
 
     public static void main(String [] args) throws IOException, InterruptedException {
-        new Agent(1234);
+        new Agent(12345);
         while (true)
             Thread.sleep(100);
     }
